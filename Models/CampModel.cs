@@ -9,7 +9,7 @@ namespace CoreCodeCamp.Models
     public class CampModel
     {
         [Required]
-        [StringLength(5,ErrorMessage ="字打太多囉")]
+        [StringLength(100,ErrorMessage ="字打太多囉")]
         public string Name { get; set; }
         [Required]
         public string Moniker { get; set; }

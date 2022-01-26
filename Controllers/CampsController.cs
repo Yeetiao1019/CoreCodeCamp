@@ -72,18 +72,19 @@ namespace CoreCodeCamp.Controllers
             }
         }
 
+        [HttpPost]
         public async Task<ActionResult<CampModel>> Post(CampModel campModel)        // Model Binding
         {
             try
             {
                 var Existing = _campRepository.GetCampAsync(campModel.Moniker);
-                if(Existing != null)
+                if (Existing != null)
                 {
                     return BadRequest("此綽號已存在");
                 }
 
                 var Location = _linkGenerator.GetPathByAction("Get",
-                    "Camps", 
+                    "Camps",
                     new { moniker = campModel.Moniker });     // 製作呼叫 Get Action 這一個 API 的 URI
 
                 if (string.IsNullOrWhiteSpace(Location))
@@ -98,6 +99,29 @@ namespace CoreCodeCamp.Controllers
                 if (await _campRepository.SaveChangesAsync())
                 {
                     return Created(Location, _mapper.Map<CampModel>(Camp));     //成功建立後會呼叫的 URI
+                }
+            }
+            catch (Exception)
+            {
+                return this.StatusCode(StatusCodes.Status500InternalServerError, "Database Failure");
+            }
+
+            return BadRequest();
+        }
+
+        [HttpPut("{moniker}")]
+        public async Task<ActionResult<CampModel>> Put(string moniker, CampModel campModel)
+        {
+            try
+            {
+                var OldCamp = await _campRepository.GetCampAsync(moniker);
+                if (OldCamp == null) return NotFound($"找不到營區，{moniker} 此綽號不存在");
+
+                _mapper.Map(campModel, OldCamp);
+
+                if (await _campRepository.SaveChangesAsync())
+                {
+                    return _mapper.Map<CampModel>(OldCamp);
                 }
             }
             catch (Exception)
