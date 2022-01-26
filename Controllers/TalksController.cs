@@ -86,5 +86,40 @@ namespace CoreCodeCamp.Controllers
                 return BadRequest("新增失敗");
             }
         }
+
+        [HttpPut("{id:int}")]
+        public async Task<ActionResult<TalkModel>> Put(string moniker, int id, TalkModel talkModel)
+        {
+            try
+            {
+                var Talk = await _campRepository.GetTalkByMonikerAsync(moniker, id);
+                if (Talk == null) return BadRequest("找不到 Talk");
+
+                _mapper.Map(talkModel, Talk);
+
+                if(talkModel.Speaker != null)
+                {
+                    var Speaker = await _campRepository.GetSpeakerAsync(talkModel.Speaker.SpeakerId);
+                    if(Speaker != null)
+                    {
+                        Talk.Speaker = Speaker;
+                    }
+                }
+
+                if(await _campRepository.SaveChangesAsync())
+                {
+                    return _mapper.Map<TalkModel>(Talk);
+                }
+                else
+                {
+                    return BadRequest("無法更新資料");
+                }
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "伺服器錯誤");
+            }
+        }
     }
 }
