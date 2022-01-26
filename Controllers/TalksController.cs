@@ -39,8 +39,21 @@ namespace CoreCodeCamp.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,"伺服器錯誤");
             }
+        }
 
-            return BadRequest();
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<TalkModel>> Get(string moniker,int id)
+        {
+            try
+            {
+                var Talk = await _campRepository.GetTalkByMonikerAsync(moniker, id);
+
+                return _mapper.Map<TalkModel>(Talk);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "伺服器錯誤");
+            }
         }
     }
 }
