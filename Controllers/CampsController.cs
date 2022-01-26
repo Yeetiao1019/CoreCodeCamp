@@ -3,6 +3,7 @@ using CoreCodeCamp.Data;
 using CoreCodeCamp.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,15 +12,18 @@ using System.Threading.Tasks;
 namespace CoreCodeCamp.Controllers
 {
     [Route("api/[controller]")]
+    [ApiController]     //使 Controller 作為 API 並接收 Json
     public class CampsController : ControllerBase
     {
         private readonly ICampRepository _campRepository;
         private readonly IMapper _mapper;
+        private readonly LinkGenerator _linkGenerator;
 
-        public CampsController(ICampRepository campRepository, IMapper mapper)
+        public CampsController(ICampRepository campRepository, IMapper mapper, LinkGenerator linkGenerator)
         {
             this._campRepository = campRepository;
             this._mapper = mapper;
+            this._linkGenerator = linkGenerator;
         }
         [HttpGet]
         public async Task<ActionResult<CampModel[]>> Get(bool includeTalks = false)
@@ -66,6 +70,42 @@ namespace CoreCodeCamp.Controllers
             {
                 return this.StatusCode(StatusCodes.Status500InternalServerError, "Database Failure");
             }
+        }
+
+        public async Task<ActionResult<CampModel>> Post(CampModel campModel)        // Model Binding
+        {
+            try
+            {
+                var Existing = _campRepository.GetCampAsync(campModel.Moniker);
+                if(Existing != null)
+                {
+                    return BadRequest("此綽號已存在");
+                }
+
+                var Location = _linkGenerator.GetPathByAction("Get",
+                    "Camps", 
+                    new { moniker = campModel.Moniker });     // 製作呼叫 Get Action 這一個 API 的 URI
+
+                if (string.IsNullOrWhiteSpace(Location))
+                {
+                    return BadRequest("無法使用此綽號");
+                }
+
+                // 新增 Camp
+                var Camp = _mapper.Map<Camp>(campModel);
+                _campRepository.Add(Camp);
+
+                if (await _campRepository.SaveChangesAsync())
+                {
+                    return Created(Location, _mapper.Map<CampModel>(Camp));     //成功建立後會呼叫的 URI
+                }
+            }
+            catch (Exception)
+            {
+                return this.StatusCode(StatusCodes.Status500InternalServerError, "Database Failure");
+            }
+
+            return BadRequest();
         }
     }
 }
