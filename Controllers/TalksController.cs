@@ -121,5 +121,29 @@ namespace CoreCodeCamp.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "伺服器錯誤");
             }
         }
+
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(string moniker, int id)
+        {
+            try
+            {
+                var Talk = await _campRepository.GetTalkByMonikerAsync(moniker, id);
+                if (Talk == null) return BadRequest("找不到 Talk");
+
+                _campRepository.Delete(Talk);
+                if (await _campRepository.SaveChangesAsync())
+                {
+                    return Ok();
+                }
+                else
+                {
+                    return BadRequest("刪除失敗");
+                }
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "伺服器錯誤");
+            }
+        }
     }
 }
