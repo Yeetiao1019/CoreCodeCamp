@@ -37,12 +37,12 @@ namespace CoreCodeCamp.Controllers
             }
             catch (Exception)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,"伺服器錯誤");
+                return StatusCode(StatusCodes.Status500InternalServerError, "伺服器錯誤");
             }
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<TalkModel>> Get(string moniker,int id)
+        public async Task<ActionResult<TalkModel>> Get(string moniker, int id)
         {
             try
             {
@@ -53,6 +53,37 @@ namespace CoreCodeCamp.Controllers
             catch (Exception)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "伺服器錯誤");
+            }
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<TalkModel>> Post(string moniker, TalkModel talkModel)
+        {
+            var Camp = await _campRepository.GetCampAsync(moniker);
+
+            if (Camp == null) return NotFound("找不到此營區");
+
+            var Talk = _mapper.Map<Talk>(talkModel);
+            Talk.Camp = Camp;
+
+            if (talkModel.Speaker == null) return BadRequest("Speaker ID 是必要的");
+            var Speaker = await _campRepository.GetSpeakerAsync(talkModel.Speaker.SpeakerId);
+            if (Speaker == null) return BadRequest("Speaker 不存在");
+
+            Talk.Speaker = Speaker;
+            _campRepository.Add(Talk);
+
+            if (await _campRepository.SaveChangesAsync())
+            {
+                var Location = _linkGenerator.GetPathByAction(HttpContext
+                    , "Get"
+                    , values : new { moniker = moniker, id = Talk.TalkId });
+
+                return Created(Location, _mapper.Map<TalkModel>(Talk));
+            }
+            else
+            {
+                return BadRequest("新增失敗");
             }
         }
     }
