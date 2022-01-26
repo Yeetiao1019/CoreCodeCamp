@@ -50,5 +50,22 @@ namespace CoreCodeCamp.Controllers
                 return this.StatusCode(StatusCodes.Status500InternalServerError, "Database Failure");
             }
         }
+
+        [HttpGet("search")]
+        public async Task<ActionResult<CampModel[]>> GetByEventDate(DateTime theDate, bool includeTalks = false)
+        {
+            try
+            {
+                var Result = await _campRepository.GetAllCampsByEventDate(theDate, includeTalks);
+
+                if (!Result.Any()) return NotFound();
+
+                return _mapper.Map<CampModel[]>(Result);
+            }
+            catch (Exception)
+            {
+                return this.StatusCode(StatusCodes.Status500InternalServerError, "Database Failure");
+            }
+        }
     }
 }
