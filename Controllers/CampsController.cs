@@ -25,6 +25,8 @@ namespace CoreCodeCamp.Controllers
             this._mapper = mapper;
             this._linkGenerator = linkGenerator;
         }
+        [ApiVersion("1.0")]
+        [ApiVersion("2.0")]
         [HttpGet]
         public async Task<ActionResult<CampModel[]>> Get(bool includeTalks = false)
         {
@@ -40,11 +42,29 @@ namespace CoreCodeCamp.Controllers
             }
         }
         [HttpGet("{moniker}")]      //HttpGet Template 值要與 Action 的參數名稱一致
+        [MapToApiVersion("1.0")]
         public async Task<ActionResult<CampModel>> Get(string moniker)
         {
             try
             {
                 var Result = await _campRepository.GetCampAsync(moniker);
+                if (Result == null) return NotFound();
+
+                return _mapper.Map<CampModel>(Result);
+            }
+            catch (Exception)
+            {
+                return this.StatusCode(StatusCodes.Status500InternalServerError, "Database Failure");
+            }
+        }
+
+        [HttpGet("{moniker}")]      //HttpGet Template 值要與 Action 的參數名稱一致
+        [MapToApiVersion("2.0")]
+        public async Task<ActionResult<CampModel>> GetVer20(string moniker)
+        {
+            try
+            {
+                var Result = await _campRepository.GetCampAsync(moniker, true);
                 if (Result == null) return NotFound();
 
                 return _mapper.Map<CampModel>(Result);

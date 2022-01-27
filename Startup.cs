@@ -27,8 +27,9 @@ namespace CoreCodeCamp
 
             services.AddApiVersioning(opt =>
             {
-                opt.DefaultApiVersion = new ApiVersion(1, 1);
-                opt.ReportApiVersions = true;
+                opt.AssumeDefaultVersionWhenUnspecified = true;     // Request 不包含 API 版本號的話，系統自動使用預設版本
+                opt.DefaultApiVersion = new ApiVersion(1, 0);       // 系統預設 API 版本
+                opt.ReportApiVersions = true;       // 在 Response 的 Header 中加入系統支援的 API 版本
             });
 
             services.AddControllers(opt => opt.EnableEndpointRouting = false);
