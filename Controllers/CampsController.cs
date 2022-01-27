@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace CoreCodeCamp.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]     //使 Controller 作為 API 並接收 Json
     public class CampsController : ControllerBase
     {

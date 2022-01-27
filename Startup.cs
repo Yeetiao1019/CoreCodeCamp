@@ -33,10 +33,11 @@ namespace CoreCodeCamp
                 opt.ReportApiVersions = true;       // 在 Response 的 Header 中加入系統支援的 API 版本
                 //opt.ApiVersionReader = new QueryStringApiVersionReader("ver");      // 讀取 URI 的 api-version，並自訂參數名稱為 ver
                 //opt.ApiVersionReader = new HeaderApiVersionReader("X-Version");     // 讀取 Header 的 api-version，並自訂 Key 名稱為 X-Version
-                opt.ApiVersionReader = ApiVersionReader.Combine(        // 使用多種方式來接收版本資訊
-                    new QueryStringApiVersionReader("ver" , "version"),
-                    new HeaderApiVersionReader("X-Version")
-                    );
+                //opt.ApiVersionReader = ApiVersionReader.Combine(        // 使用多種方式來接收版本資訊
+                //    new QueryStringApiVersionReader("ver" , "version"),
+                //    new HeaderApiVersionReader("X-Version")
+                //    );
+                opt.ApiVersionReader = new UrlSegmentApiVersionReader();        // 使用 URL 來接收版本
             });
 
             services.AddControllers(opt => opt.EnableEndpointRouting = false);
