@@ -11,22 +11,22 @@ using System.Threading.Tasks;
 
 namespace CoreCodeCamp.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/camps")]        //不使用[controller]，否則 URI 就要打 api/camps2
+    [ApiVersion("2.0")]
     [ApiController]     //使 Controller 作為 API 並接收 Json
-    public class CampsController : ControllerBase
+    public class Camps2Controller : ControllerBase
     {
         private readonly ICampRepository _campRepository;
         private readonly IMapper _mapper;
         private readonly LinkGenerator _linkGenerator;
 
-        public CampsController(ICampRepository campRepository, IMapper mapper, LinkGenerator linkGenerator)
+        public Camps2Controller(ICampRepository campRepository, IMapper mapper, LinkGenerator linkGenerator)
         {
             this._campRepository = campRepository;
             this._mapper = mapper;
             this._linkGenerator = linkGenerator;
         }
-        [ApiVersion("1.0")]
-        [ApiVersion("2.0")]
+
         [HttpGet]
         public async Task<ActionResult<CampModel[]>> Get(bool includeTalks = false)
         {
@@ -42,7 +42,6 @@ namespace CoreCodeCamp.Controllers
             }
         }
         [HttpGet("{moniker}")]      //HttpGet Template 值要與 Action 的參數名稱一致
-        [MapToApiVersion("1.0")]
         public async Task<ActionResult<CampModel>> Get(string moniker)
         {
             try
@@ -50,32 +49,19 @@ namespace CoreCodeCamp.Controllers
                 var Result = await _campRepository.GetCampAsync(moniker);
                 if (Result == null) return NotFound();
 
-                return _mapper.Map<CampModel>(Result);
+                var NewResult = new
+                {
+                    Message = "Hello world API Ver 2.0",
+                    Result = _mapper.Map<CampModel>(Result)
+                };
+
+                return Ok(NewResult);
             }
             catch (Exception)
             {
                 return this.StatusCode(StatusCodes.Status500InternalServerError, "Database Failure");
             }
         }
-
-        // 若同時存在兩個 2.0 的 API，則會優先使用 CampsController 的 Action
-
-        //[HttpGet("{moniker}")]      //HttpGet Template 值要與 Action 的參數名稱一致
-        //[MapToApiVersion("2.0")]
-        //public async Task<ActionResult<CampModel>> Get20(string moniker)
-        //{
-        //    try
-        //    {
-        //        var Result = await _campRepository.GetCampAsync(moniker);
-        //        if (Result == null) return NotFound();
-
-        //        return _mapper.Map<CampModel>(Result);
-        //    }
-        //    catch (Exception)
-        //    {
-        //        return this.StatusCode(StatusCodes.Status500InternalServerError, "Database Failure");
-        //    }
-        //}
 
         [HttpGet("search")]
         public async Task<ActionResult<CampModel[]>> GetByEventDate(DateTime theDate, bool includeTalks = false)
